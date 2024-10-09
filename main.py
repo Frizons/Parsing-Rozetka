@@ -1,20 +1,27 @@
-import re
 import requests
-import json
+from bs4 import BeautifulSoup
 
-url = requests.get(
-    "https://rozetka.com.ua/ua/notebooks/c80004/sort=rank/",
-)
+url = "https://rozetka.com.ua/ua/notebooks/c80004/sort=rank/"
+user_agent = {
+    "Accept": "text/html",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
+}
 
-convert_page = url.text
-patter = r"(?<=with_groups=1\":{\"body\":{\"data\":).*?(?=},\"headers\":{\"server\")"
-find_str = convert_page
-finding_name = re.search(patter, find_str)[0]
-new_str = finding_name
-str_to_list = json.loads(new_str)
+get_page = requests.get(url, headers=user_agent)
+get_content = get_page.text
+soup_obj = BeautifulSoup(get_content, "html.parser")
+find_content = soup_obj.find_all("div", class_="goods-tile__content")
+product_list = []
+for product in find_content:
+    product_param = [
+        (str(item)).replace("\xa0", ".")
+        for item in product.stripped_strings
+        if len(item) > 1 and item != "Готовий до відправлення"
+    ]
+    product_list.append(product_param)
 
-with open("test_page.txt", "w", encoding="utf-8") as file_safe:
-    file_safe.write(new_str)
-
-for item in str_to_list:
-    print("Name:", item["title"], "Price:", item["price"])
+for item in product_list:
+    if len(item) > 2:
+        print(f"Name: {item[0]} Old price: {item[1]} New price: {item[2]}")
+    else:
+        print(f"Name: {item[0]} Price: {item[1]}")
