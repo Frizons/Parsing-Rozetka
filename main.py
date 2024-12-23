@@ -1,27 +1,42 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = "https://rozetka.com.ua/ua/notebooks/c80004/sort=rank/"
 user_agent = {
-    "Accept": "text/html",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
+    "User-Agent": "YOUR USER AGENT",
 }
 
-get_page = requests.get(url, headers=user_agent)
-get_content = get_page.text
-soup_obj = BeautifulSoup(get_content, "html.parser")
-find_content = soup_obj.find_all("div", class_="goods-tile__content")
-product_list = []
-for product in find_content:
-    product_param = [
-        (str(item)).replace("\xa0", ".")
-        for item in product.stripped_strings
-        if len(item) > 1 and item != "Готовий до відправлення"
-    ]
-    product_list.append(product_param)
 
-for item in product_list:
-    if len(item) > 2:
-        print(f"Name: {item[0]} Old price: {item[1]} New price: {item[2]}")
-    else:
-        print(f"Name: {item[0]} Price: {item[1]}")
+class Parser:
+
+    def finding_item(self, url):
+        get_page = requests.get(url, headers=user_agent)
+        get_content = get_page.text
+        soup_obj = BeautifulSoup(get_content, "html.parser")
+        find_content = soup_obj.find_all("div", class_="goods-tile__content")
+
+        for item in find_content:
+            find_name_item = item.find(
+                "span", class_="goods-tile__title ng-star-inserted"
+            )
+            find_link_item = item.find("a", class_="ng-star-inserted")
+            name_item = find_name_item.text
+            link_item = find_link_item.get("href")
+
+            try:
+                find_old_price_item = item.select(
+                    "div.goods-tile__price--old.price--gray.ng-star-inserted"
+                )
+                find_new_price_item = item.select("span.goods-tile__price-value")
+                old_price = find_old_price_item[0].text
+                new_price = find_new_price_item[0].text
+
+                print(
+                    f"Name: {name_item}; Price old: {old_price} Price new: {new_price}; Link: {link_item}"
+                )
+            except:
+                find_price_item = item.find("p", class_="ng-star-inserted")
+                regular_price = find_price_item.text
+
+                print(
+                    f"Name: {name_item}; Price gerular: {regular_price}; Link: {link_item}"
+                )
