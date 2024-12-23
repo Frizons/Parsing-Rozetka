@@ -1,15 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 
-user_agent = {
-    "User-Agent": "YOUR USER AGENT",
-}
-
 
 class Parser:
 
     def finding_item(self, url):
-        get_page = requests.get(url, headers=user_agent)
+        get_page = requests.get(url)
         get_content = get_page.text
         soup_obj = BeautifulSoup(get_content, "html.parser")
         find_content = soup_obj.find_all("div", class_="goods-tile__content")
@@ -40,3 +36,8 @@ class Parser:
                 print(
                     f"Name: {name_item}; Price gerular: {regular_price}; Link: {link_item}"
                 )
+
+
+notebooks = Parser()
+
+notebooks.finding_item("https://rozetka.com.ua/ua/notebooks/c80004/")
