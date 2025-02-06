@@ -1,6 +1,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+import time
 
 
 class Parser:
@@ -12,10 +13,8 @@ class Parser:
         find_content = self.get_content(soup_obj)
 
         try:
-            find_pages_number = soup_obj.find_all(
-                "a", class_="pagination__link ng-star-inserted"
-            )
-            count_pages = int(find_pages_number[len(find_pages_number) - 1].text)
+            find_pages_number = soup_obj.find_all("a", class_="pagination__link")
+            count_pages = len(find_pages_number)
         except:
             count_pages = 1
 
@@ -55,34 +54,35 @@ class Parser:
     def get_item_info(self, find_content):
 
         for item in find_content:
-            find_name_item = item.find(
-                "span", class_="goods-tile__title ng-star-inserted"
-            )
-            find_link_item = item.find("a", class_="ng-star-inserted")
+            find_name_item = item.find("span", class_="goods-tile__title")
+            find_link_item = item.find("a")
             name_item = find_name_item.text
             link_item = find_link_item.get("href")
 
             try:
                 find_old_price_item = item.select(
-                    "div.goods-tile__price--old.price--gray.ng-star-inserted"
+                    "div.goods-tile__price--old.price--gray"
                 )
-                find_new_price_item = item.select("span.goods-tile__price-value")
-                if find_new_price_item:
+                if find_old_price_item:
+                    find_new_price_item = item.select("span.goods-tile__price-value")
                     old_price = find_old_price_item[0].text
                     new_price = find_new_price_item[0].text
 
                     print(
                         f"Name: {name_item}; Price old: {old_price} Price new: {new_price}; Link: {link_item}"
                     )
+                elif not find_old_price_item:
+                    raise Exception("Item not found")
                 else:
                     break
             except:
-                find_price_item = item.find("p", class_="ng-star-inserted")
-                regular_price = find_price_item.text
+                find_price_item = item.select("span.goods-tile__price-value")
+                if find_price_item:
+                    regular_price = find_price_item[0].text
 
-                print(
-                    f"Name: {name_item}; Price gerular: {regular_price}; Link: {link_item}"
-                )
+                    print(
+                        f"Name: {name_item}; Price gerular: {regular_price}; Link: {link_item}"
+                    )
 
 
 notebooks = Parser()
